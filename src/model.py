@@ -41,3 +41,26 @@ def train_linear_model(X_train, y_train):
     model.fit(X_train, y_train)
 
     return model
+
+from sklearn.preprocessing import PolynomialFeatures
+from sklearn.linear_model import LinearRegression
+
+def train_polynomial_model(X_train, y_train, degree=2):
+    """
+    Trains a polynomial regression model.
+
+    Returns:
+        model, polynomial transformer
+    """
+
+    # create polynomial feature transformer
+    poly = PolynomialFeatures(degree=degree)
+
+    # transform X into polynomial space
+    X_train_poly = poly.fit_transform(X_train)
+
+    # train linear model on transformed data
+    model = LinearRegression()
+    model.fit(X_train_poly, y_train)
+
+    return model, poly

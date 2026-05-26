@@ -17,22 +17,30 @@ import importlib
 import numpy as np
 from src.data import load_images_optional_crop
 from src.features import append_entropy_to_images
-from src.model import prepare_train_test, train_linear_model
-from src.evaluation import evaluate_model_mae
+from src.model import prepare_train_test, train_linear_model, train_polynomial_model
+from src.evaluation import evaluate_linear_model
+from src.features import append_fft_1d_energy_to_images
+from src.evaluation import evaluate_polynomial_model
+from src.data import relabel_images_by_part_number
 
 
 #load images
 images = load_images_optional_crop("flat", base_dir="data", crop_fraction=0.30)
 
-#compute entropy and append to images
-images = append_entropy_to_images(images)
+#compute fft_1d_energy and append to images
+images = append_fft_1d_energy_to_images(images)
 
 # prepare the 80/20 train test split
 X_train, X_test, y_train, y_test = prepare_train_test(images)
 
 # train the model
-model = train_linear_model(X_train, y_train)
+model, poly = train_polynomial_model(X_train, y_train, degree=2)
 
 # evaluate the model
-mae = evaluate_model_mae(model, X_test, y_test)
+mae = evaluate_polynomial_model(model, poly, X_test, y_test)
 print("MAE:", mae)
+
+
+
+
+
