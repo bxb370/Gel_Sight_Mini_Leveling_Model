@@ -22,7 +22,7 @@ from src.evaluation import evaluate_model_mae
 
 
 #load images
-images = load_images_optional_crop("flat", crop_fraction=0.30)
+images = load_images_optional_crop("flat", base_dir="data", crop_fraction=0.30)
 
 #compute entropy and append to images
 images = append_entropy_to_images(images)
