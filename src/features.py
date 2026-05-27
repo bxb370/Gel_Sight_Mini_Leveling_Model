@@ -82,14 +82,15 @@ def append_edge_strength_to_images(images):
 
 import numpy as np
 
+"""
 def append_fft_1d_energy_to_images(images):
-    """
+    
     Takes a list of images
     and returns a new list with fft_1d_energy added.
 
     Output format:
     (label, filename, img_array, fft_1d_energy)
-    """
+    
     updated_images = []
 
     for label, filename, img_array in images:
@@ -115,4 +116,44 @@ def append_fft_1d_energy_to_images(images):
         updated_images.append((label, filename, img_array, fft_1d_energy))
 
     return updated_images
+"""
 
+def append_fft_1d_energy_to_images(images):
+    """
+    Adds fft_1d_energy to each image dict.
+
+    Output:
+        Each image dict gains:
+            - "fft_1d_energy"
+    """
+
+    updated_images = []
+
+    for img_dict in images:
+        img_array = img_dict["image"]
+
+        # ✅ downsample for speed + stability
+        img = img_array[::4, ::4].astype(float)
+
+        # ✅ collapse to 1D signal
+        profile = img.mean(axis=0)
+
+        # ✅ compute FFT
+        fft_1d = np.fft.fft(profile)
+
+        # ✅ magnitude
+        mag = np.abs(fft_1d)
+
+        # ✅ remove DC component
+        mag[0] = 0
+
+        # ✅ compute energy
+        fft_1d_energy = np.mean(mag)
+
+        # ✅ create updated copy (safer than modifying original)
+        new_img_dict = img_dict.copy()
+        new_img_dict["fft_1d_energy"] = fft_1d_energy
+
+        updated_images.append(new_img_dict)
+
+    return updated_images
