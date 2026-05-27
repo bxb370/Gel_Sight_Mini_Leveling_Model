@@ -139,7 +139,7 @@ def filter_images(images, **filters):
     return filtered
 
 
-
+"""
 import os
 import numpy as np
 from PIL import Image
@@ -282,3 +282,4 @@ def relabel_images_by_part_number(images):
         relabeled.append(item)
 
     return relabeled
+"""
