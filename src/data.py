@@ -1,4 +1,6 @@
 
+"""This file handles loading the data"""
+
 import os
 import numpy as np
 from PIL import Image

@@ -39,8 +39,3 @@ model, poly = train_polynomial_model(X_train, y_train, degree=2)
 # evaluate the model
 mae = evaluate_polynomial_model(model, poly, X_test, y_test)
 print("MAE:", mae)
-
-
-
-
-

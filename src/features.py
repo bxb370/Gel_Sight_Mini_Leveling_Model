@@ -1,3 +1,5 @@
+"""This file contains functions for calculating image features."""
+
 import numpy as np
 from scipy import ndimage
 from scipy.stats import entropy
