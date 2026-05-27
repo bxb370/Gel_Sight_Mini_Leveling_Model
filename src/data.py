@@ -145,7 +145,7 @@ import numpy as np
 from PIL import Image
 
 def load_images(data_type="raw", base_dir="../data"):
-    """
+    
     Loads images from a specified dataset (e.g., 'raw' or 'flat').
 
     Parameters:
@@ -154,7 +154,7 @@ def load_images(data_type="raw", base_dir="../data"):
 
     Returns:
         images (list): List of tuples (label, filename, img_array)
-    """
+    
 
     data_dir = os.path.join(base_dir, data_type)
 
@@ -186,7 +186,7 @@ import numpy as np
 from PIL import Image
 
 def load_images_optional_crop(data_type="raw", base_dir="../data", crop_fraction=None):
-    """
+    
     Loads images and optionally crops them.
 
     Parameters:
@@ -197,7 +197,7 @@ def load_images_optional_crop(data_type="raw", base_dir="../data", crop_fraction
 
     Returns:
         images (list): (label, filename, img_array)
-    """
+    
 
     data_dir = os.path.join(base_dir, data_type)
     images = []
@@ -254,7 +254,7 @@ PART_AVG_LABELS = {
 
 
 def relabel_images_by_part_number(images):
-    """
+    
     Replaces the label in each image tuple with the average human rating
     from the PART_AVG_LABELS lookup table, matched by the part number
     found in the filename (a number between 100 and 150).
@@ -266,7 +266,7 @@ def relabel_images_by_part_number(images):
         list: New list of tuples with the label replaced by the avg rating.
               Tuples whose filename contains no recognised part number are
               kept unchanged.
-    """
+    
     import re
 
     relabeled = []

@@ -157,3 +157,36 @@ def append_fft_1d_energy_to_images(images):
         updated_images.append(new_img_dict)
 
     return updated_images
+
+
+def append_fft_2d_energy_to_images(images):
+    """
+    Adds fft_2d_energy to each image dict.
+    """
+
+    updated_images = []
+
+    for img_dict in images:
+        img = img_dict["image"]
+
+        # ✅ downsample (same as 1D for consistency)
+        img_ds = img[::4, ::4].astype(float)
+
+        # ✅ 2D FFT
+        fft_2d = np.fft.fft2(img_ds)
+
+        # ✅ magnitude
+        mag = np.abs(fft_2d)
+
+        # ✅ remove DC component (top-left)
+        mag[0, 0] = 0
+
+        # ✅ compute energy
+        fft_2d_energy = np.mean(mag)
+
+        new_img_dict = img_dict.copy()
+        new_img_dict["fft_2d_energy"] = fft_2d_energy
+
+        updated_images.append(new_img_dict)
+
+    return updated_images

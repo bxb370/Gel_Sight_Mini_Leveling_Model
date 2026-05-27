@@ -28,7 +28,30 @@ def prepare_train_test(images, test_size=0.2, random_state=42):
 
     return X_train, X_test, y_train, y_test
 """
+from sklearn.ensemble import RandomForestRegressor
 
+def train_random_forest_model(X_train, y_train, n_estimators=100, random_state=42):
+    """
+    Trains a Random Forest regression model.
+
+    Parameters:
+        X_train (array): training features
+        y_train (array): training labels
+        n_estimators (int): number of trees
+
+    Returns:
+        trained model
+    """
+
+    model = RandomForestRegressor(
+        n_estimators=n_estimators,
+        random_state=random_state,
+        n_jobs=-1
+    )
+
+    model.fit(X_train, y_train)
+
+    return model
 
 from sklearn.linear_model import LinearRegression
 
@@ -95,6 +118,47 @@ def prepare_train_test(images, feature_key="fft_1d_energy", test_size=0.2, rando
     y = np.array([img["LevelingScore"] for img in images])
 
     # Train/test split (with stratification)
+    X_train, X_test, y_train, y_test = train_test_split(
+        X,
+        y,
+        test_size=test_size,
+        stratify=y,
+        random_state=random_state
+    )
+
+    return X_train, X_test, y_train, y_test
+
+
+from sklearn.model_selection import train_test_split
+import numpy as np
+
+def prepare_train_test_multi(
+    images,
+    feature_keys=("fft_1d_energy", "fft_2d_energy"),
+    test_size=0.2,
+    random_state=42
+):
+    """
+    Takes a list of image dicts and prepares train/test split with multiple features.
+
+    Parameters:
+        images (list): list of dicts (with metadata + features)
+        feature_keys (list/tuple): features to include in X
+
+    Returns:
+        X_train, X_test, y_train, y_test
+    """
+
+    # ✅ Extract X (multiple features)
+    X = np.array([
+        [img[k] for k in feature_keys]
+        for img in images
+    ])
+
+    # ✅ Extract y
+    y = np.array([img["LevelingScore"] for img in images])
+
+    # ✅ Train/test split
     X_train, X_test, y_train, y_test = train_test_split(
         X,
         y,
