@@ -132,6 +132,9 @@ def prepare_train_test(images, feature_key="fft_1d_energy", test_size=0.2, rando
 from sklearn.model_selection import train_test_split
 import numpy as np
 
+from sklearn.model_selection import train_test_split
+import numpy as np
+
 def prepare_train_test_multi(
     images,
     feature_keys=("fft_1d_energy", "fft_2d_energy"),
@@ -139,7 +142,7 @@ def prepare_train_test_multi(
     random_state=42
 ):
     """
-    Takes a list of image dicts and prepares train/test split with multiple features.
+    Prepares train/test split with NO panel overlap (grouped by PanelID).
 
     Parameters:
         images (list): list of dicts (with metadata + features)
@@ -149,22 +152,35 @@ def prepare_train_test_multi(
         X_train, X_test, y_train, y_test
     """
 
-    # ✅ Extract X (multiple features)
-    X = np.array([
-        [img[k] for k in feature_keys]
-        for img in images
-    ])
+    # ✅ Get unique PanelIDs
+    panel_ids = list(set(img["PanelID"] for img in images))
 
-    # ✅ Extract y
-    y = np.array([img["LevelingScore"] for img in images])
-
-    # ✅ Train/test split
-    X_train, X_test, y_train, y_test = train_test_split(
-        X,
-        y,
+    # ✅ Split panels instead of images
+    train_panels, test_panels = train_test_split(
+        panel_ids,
         test_size=test_size,
-        stratify=y,
         random_state=random_state
     )
+
+    # ✅ Split images based on panel membership
+    train_images = [img for img in images if img["PanelID"] in train_panels]
+    test_images  = [img for img in images if img["PanelID"] in test_panels]
+
+    # ✅ Build X and y for train
+    X_train = np.array([
+        [img[k] for k in feature_keys]
+        for img in train_images
+    ])
+    y_train = np.array([img["LevelingScore"] for img in train_images])
+
+    # ✅ Build X and y for test
+    X_test = np.array([
+        [img[k] for k in feature_keys]
+        for img in test_images
+    ])
+    y_test = np.array([img["LevelingScore"] for img in test_images])
+
+    print(f"Train panels: {len(train_panels)}, Test panels: {len(test_panels)}")
+    print(f"Train images: {len(train_images)}, Test images: {len(test_images)}")
 
     return X_train, X_test, y_train, y_test
