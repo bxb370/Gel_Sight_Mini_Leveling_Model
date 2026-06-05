@@ -14,6 +14,7 @@ from pathlib import Path
 
 import numpy as np
 import onnx
+import onnxruntime as ort
 from onnx import TensorProto, helper
 from PIL import Image
 
@@ -53,6 +54,50 @@ def predict_average_pixel_from_image(image_path):
     """Compute average pixel value directly from an image file path."""
     pixels = load_image_pixels(image_path)
     return predict_average_pixel(pixels)
+
+
+def load_color_image_pixels(image_path):
+    """Load an image in its native mode and return flattened pixel values."""
+    img = Image.open(image_path)
+    img_array = np.asarray(img, dtype=np.float32)
+    return img_array.ravel()
+
+
+def load_rgb_image_pixels(image_path):
+    """Load an image as RGB and return flattened pixel values."""
+    img = Image.open(image_path).convert("RGB")
+    img_array = np.asarray(img, dtype=np.float32)
+    return img_array.ravel()
+
+
+def predict_average_color_pixel_from_image(image_path):
+    """Compute average pixel value from image pixels without RGB conversion."""
+    pixels = load_color_image_pixels(image_path)
+    return predict_average_pixel(pixels)
+
+
+def predict_average_rgb_pixel_from_image(image_path):
+    """Compute average pixel value after converting the image to RGB."""
+    pixels = load_rgb_image_pixels(image_path)
+    return predict_average_pixel(pixels)
+
+
+def run_mean_pixel_onnx(image_path, model_path="models/mean_pixel.onnx"):
+    """Run ONNX mean-pixel model directly on a single input image.
+
+    Steps:
+    1. Convert image to grayscale and flatten to [P].
+    2. Feed tensor to ONNX input "pixels".
+    3. Return scalar output from ONNX output "avg_pixel".
+    """
+    pixels = prepare_onnx_input_from_image(image_path)
+    session = ort.InferenceSession(str(model_path), providers=["CPUExecutionProvider"])
+
+    input_name = session.get_inputs()[0].name
+    output_name = session.get_outputs()[0].name
+    output = session.run([output_name], {input_name: pixels})[0]
+
+    return float(np.asarray(output).reshape(-1)[0])
 
 
 def export_mean_pixel_onnx(output_path="models/mean_pixel.onnx"):
@@ -113,10 +158,32 @@ if __name__ == "__main__":
         names = ", ".join(str(p) for p in candidates)
         raise FileNotFoundError(f"Could not find test image. Checked: {names}")
 
-    avg = predict_average_pixel_from_image(image_path)
-    print(f"Average pixel value for {image_path}: {avg:.2f}")
+    onnx_path = Path("models/mean_pixel.onnx")
+    if not onnx_path.exists():
+        onnx_path = export_mean_pixel_onnx(onnx_path)
 
-    onnx_path = export_mean_pixel_onnx()
-    print(f"ONNX model saved to: {onnx_path}")
+    avg = run_mean_pixel_onnx(image_path, onnx_path)
+    print(f"ONNX average pixel value for {image_path}: {avg:.2f}")
+
+    print(f"ONNX model used: {onnx_path}")
+
+    color_avg = predict_average_color_pixel_from_image(image_path)
+    native_mode = Image.open(image_path).mode
+    print(f"Native-mode ({native_mode}) average pixel value for {image_path}: {color_avg:.2f}")
+
+    native_pixels = load_color_image_pixels(image_path)
+    print(f"First 10 native-mode pixel values: {native_pixels[:10]}")
+    print(f"Last 10 native-mode pixel values:  {native_pixels[-10:]}")
+
+    rgb_avg = predict_average_rgb_pixel_from_image(image_path)
+    rgb_pixels = load_rgb_image_pixels(image_path)
+    print(f"RGB-converted average pixel value for {image_path}: {rgb_avg:.2f}")
+    print(f"First 10 RGB pixel values: {rgb_pixels[:10]}")
+    print(f"Last 10 RGB pixel values:  {rgb_pixels[-10:]}")
+
+
+
+
+    
 
     
