@@ -1,10 +1,21 @@
-"""Minimal mean-pixel model + ONNX export utilities."""
+"""Create/export a single-image mean-pixel ONNX model and preprocessing utilities.
+
+Backend contract for this ONNX model:
+1. Decode the image file (PNG/JPG/etc.) outside ONNX.
+2. Convert image to grayscale (single channel).
+3. Flatten grayscale pixels to a 1D vector of length P.
+4. Cast to float32 and keep shape [P] (no batch dimension).
+5. Feed this tensor to ONNX input name ``pixels``.
+
+The model output ``avg_pixel`` has shape [1] (single score).
+"""
 
 from pathlib import Path
 
 import numpy as np
 import onnx
 from onnx import TensorProto, helper
+from PIL import Image
 
 
 def predict_average_pixel(pixel_values):
@@ -15,20 +26,62 @@ def predict_average_pixel(pixel_values):
     return float(arr.mean())
 
 
-def export_mean_pixel_onnx(output_path="models/mean_pixel.onnx"):
-    """Create an ONNX model that computes mean(pixel_values) per sample.
+def load_image_pixels(image_path):
+    """Load an image as grayscale and return flattened pixel values."""
+    img = Image.open(image_path).convert("L")
+    img_array = np.asarray(img, dtype=np.float32)
+    return img_array.ravel()
 
-    Input shape:  [N, P] where N=batch size and P=number of pixels.
-    Output shape: [N, 1] mean pixel value for each sample.
+
+def prepare_onnx_input_from_image(image_path):
+    """Prepare one image for ONNX inference as float32 tensor [P].
+
+    What backend needs to do before calling the ONNX model with an image:
+    1. Read/decode image bytes with an image library.
+    2. Convert to grayscale to produce one pixel value per location (0-255).
+    3. Flatten to a 1D pixel vector.
+    4. Cast to float32 and keep a 1D vector [P].
+
+    Returns:
+        np.ndarray: float32 array with shape [P] for input ``pixels``.
     """
-    input_tensor = helper.make_tensor_value_info("pixels", TensorProto.FLOAT, ["N", "P"])
-    output_tensor = helper.make_tensor_value_info("avg_pixel", TensorProto.FLOAT, ["N", 1])
+    pixels = load_image_pixels(image_path)
+    return pixels.astype(np.float32)
+
+
+def predict_average_pixel_from_image(image_path):
+    """Compute average pixel value directly from an image file path."""
+    pixels = load_image_pixels(image_path)
+    return predict_average_pixel(pixels)
+
+
+def export_mean_pixel_onnx(output_path="models/mean_pixel.onnx"):
+    """Create an ONNX model that computes mean grayscale pixel for one image.
+
+    Input:
+        name: ``pixels``
+        type: float32
+        shape: [P]
+            P = flattened grayscale pixel count for one image
+
+    Output:
+        name: ``avg_pixel``
+        type: float32
+        shape: [1]
+
+    Note for backend integration:
+    ONNX does not decode PNG files directly in this model. Decode image and
+    preprocess first (grayscale -> flatten -> float32 -> [P]), then call
+    ONNX runtime with input name ``pixels``.
+    """
+    input_tensor = helper.make_tensor_value_info("pixels", TensorProto.FLOAT, ["P"])
+    output_tensor = helper.make_tensor_value_info("avg_pixel", TensorProto.FLOAT, [1])
 
     reduce_mean_node = helper.make_node(
         "ReduceMean",
         inputs=["pixels"],
         outputs=["avg_pixel"],
-        axes=[1],
+        axes=[0],
         keepdims=1,
     )
 
@@ -52,9 +105,18 @@ def export_mean_pixel_onnx(output_path="models/mean_pixel.onnx"):
 
 
 if __name__ == "__main__":
-    example_pixels = [0, 128, 255, 100, 50]
-    avg = predict_average_pixel(example_pixels)
-    print(f"Python average pixel: {avg:.2f}")
+    requested_name = "iestImage0.png"
+    candidates = [Path(requested_name), Path("testImage0.png")]
+    image_path = next((p for p in candidates if p.exists()), None)
+
+    if image_path is None:
+        names = ", ".join(str(p) for p in candidates)
+        raise FileNotFoundError(f"Could not find test image. Checked: {names}")
+
+    avg = predict_average_pixel_from_image(image_path)
+    print(f"Average pixel value for {image_path}: {avg:.2f}")
 
     onnx_path = export_mean_pixel_onnx()
     print(f"ONNX model saved to: {onnx_path}")
+
+    
