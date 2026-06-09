@@ -8,9 +8,9 @@ import os
 import pandas as pd
 import re
 
-def build_metadata_from_existing(data_types=("raw", "flat"), base_dir="../data", output_file="metadata.csv"):
+def build_df_from_data(data_types=("raw", "flat"), base_dir="../data"):
     """
-    Builds metadata.csv from current dataset structure.
+    Builds a metadata DataFrame from the data folder.
 
     Extracts:
         - LevelingScore (from folder)
@@ -64,10 +64,75 @@ def build_metadata_from_existing(data_types=("raw", "flat"), base_dir="../data",
 
     df = pd.DataFrame(records)
 
-    output_path = os.path.join(base_dir, output_file)
-    df.to_csv(output_path, index=False)
+    return df
 
-    print(f"Saved metadata to {output_path}")
-    print(f"Total records: {len(df)}")
+def build_df_from_new_data(base_dir="../data_new"):
+    """
+    Builds a metadata DataFrame from the data_new folder.
+
+    Expected filename pattern example:
+        {Leveling-1}P{Chase}_D{6.2.2026}_type(STD)_GS{Rob2BCA-WPWU}_State{FLAT}_0degrees_flat (2).png
+
+    Extracts:
+        - LevelingScore (from folder name, fallback to filename)
+        - Person (from P{...})
+        - DateCollected (from D{...})
+        - ImageType (from type(...))
+        - GSCamera (from GS{...})
+        - State (from State{...}, fallback to raw/flat in filename)
+        - FilePath
+
+    PanelID is not present in new data and is always set to None.
+    """
+
+    records = []
+
+    for label_folder in sorted(os.listdir(base_dir), key=lambda x: int(x)):
+        folder_path = os.path.join(base_dir, label_folder)
+
+        if not os.path.isdir(folder_path):
+            continue
+
+        level_from_folder = int(label_folder)
+
+        for filename in os.listdir(folder_path):
+            if not filename.lower().endswith(".png"):
+                continue
+
+            filepath = os.path.join(folder_path, filename)
+
+            level_match = re.search(r"Leveling-(\d+)", filename, flags=re.IGNORECASE)
+            person_match = re.search(r"P\{([^}]+)\}", filename)
+            date_match = re.search(r"_D\{([^}]+)\}", filename)
+            image_type_match = re.search(r"_type\(([^)]+)\)", filename, flags=re.IGNORECASE)
+            gs_match = re.search(r"_GS\{([^}]+)\}", filename)
+            state_match = re.search(r"_State\{([^}]+)\}", filename, flags=re.IGNORECASE)
+
+            level = int(level_match.group(1)) if level_match else level_from_folder
+            person = person_match.group(1) if person_match else None
+            date_collected = date_match.group(1) if date_match else None
+            image_type = image_type_match.group(1) if image_type_match else None
+            gs_camera = gs_match.group(1) if gs_match else None
+
+            if state_match:
+                state = state_match.group(1).lower()
+            else:
+                fallback_state_match = re.search(r"(raw|flat)", filename, flags=re.IGNORECASE)
+                state = fallback_state_match.group(1).lower() if fallback_state_match else None
+
+            record = {
+                "LevelingScore": level,
+                "Person": person,
+                "DateCollected": date_collected,
+                "ImageType": image_type,
+                "GSCamera": gs_camera,
+                "PanelID": None,
+                "State": state,
+                "FilePath": filepath,
+            }
+
+            records.append(record)
+
+    df = pd.DataFrame(records)
 
     return df
