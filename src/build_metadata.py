@@ -8,6 +8,18 @@ import os
 import pandas as pd
 import re
 
+
+METADATA_COLUMNS = [
+    "LevelingScore",
+    "Person",
+    "DateCollected",
+    "ImageType",
+    "GSCamera",
+    "PanelID",
+    "State",
+    "FilePath",
+]
+
 def build_df_from_data(data_types=("raw", "flat"), base_dir="../data"):
     """
     Builds a metadata DataFrame from the data folder.
@@ -79,7 +91,7 @@ def build_df_from_new_data(base_dir="../data_new"):
         - DateCollected (from D{...})
         - ImageType (from type(...))
         - GSCamera (from GS{...})
-        - State (from State{...}, fallback to raw/flat in filename)
+        - State (from the filename suffix: `_flat` means flat, otherwise raw)
         - FilePath
 
     PanelID is not present in new data and is always set to None.
@@ -106,7 +118,6 @@ def build_df_from_new_data(base_dir="../data_new"):
             date_match = re.search(r"_D\{([^}]+)\}", filename)
             image_type_match = re.search(r"_type\(([^)]+)\)", filename, flags=re.IGNORECASE)
             gs_match = re.search(r"_GS\{([^}]+)\}", filename)
-            state_match = re.search(r"_State\{([^}]+)\}", filename, flags=re.IGNORECASE)
 
             level = int(level_match.group(1)) if level_match else level_from_folder
             person = person_match.group(1) if person_match else None
@@ -114,11 +125,13 @@ def build_df_from_new_data(base_dir="../data_new"):
             image_type = image_type_match.group(1) if image_type_match else None
             gs_camera = gs_match.group(1) if gs_match else None
 
-            if state_match:
-                state = state_match.group(1).lower()
+            filename_lower = filename.lower()
+            if re.search(r"_flat(?:\s*\(\d+\))?\.png$", filename_lower):
+                state = "flat"
+            elif re.search(r"\.png$", filename_lower):
+                state = "raw"
             else:
-                fallback_state_match = re.search(r"(raw|flat)", filename, flags=re.IGNORECASE)
-                state = fallback_state_match.group(1).lower() if fallback_state_match else None
+                state = None
 
             record = {
                 "LevelingScore": level,
@@ -136,3 +149,38 @@ def build_df_from_new_data(base_dir="../data_new"):
     df = pd.DataFrame(records)
 
     return df
+
+
+def _normalize_metadata_df(df):
+    """Return a metadata frame with the expected column order."""
+
+    return df.reindex(columns=METADATA_COLUMNS)
+
+
+def load_metadata(
+    data_base_dir="../data",
+    new_data_base_dir="../data_new",
+    output_file="metadata.csv",
+):
+    """
+    Load the two metadata sources, verify they share the same schema,
+    combine them, and write the result to metadata.csv.
+    """
+
+    old_data_df = _normalize_metadata_df(build_df_from_data(base_dir=data_base_dir))
+    new_data_df = _normalize_metadata_df(build_df_from_new_data(base_dir=new_data_base_dir))
+
+    if list(old_data_df.columns) != list(new_data_df.columns):
+        raise ValueError("Metadata frames are not compatible and cannot be combined.")
+
+    metadata_df = pd.concat([old_data_df, new_data_df], ignore_index=True)
+
+    output_path = os.path.join(data_base_dir, output_file)
+    metadata_df.to_csv(output_path, index=False)
+
+    print(f"Saved metadata to {output_path}")
+    print(f"Combined records: {len(metadata_df)}")
+
+    return metadata_df
+
+

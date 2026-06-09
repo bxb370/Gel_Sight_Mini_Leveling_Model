@@ -139,6 +139,85 @@ def filter_images(images, **filters):
     return filtered
 
 
+def _normalize_compare_path(path_value):
+    """Normalize a path so equivalent paths compare equal across notebooks/scripts."""
+    if path_value is None:
+        return None
+
+    normalized = os.path.normpath(str(path_value)).replace("\\", "/").lower()
+
+    # Remove leading ./ or ../ segments so relative base differences do not hide matches.
+    while normalized.startswith("./") or normalized.startswith("../"):
+        normalized = normalized.split("/", 1)[1] if "/" in normalized else ""
+
+    return normalized
+
+
+def compare_image_collections(images_a, images_b, key="FilePath", normalize_paths=True):
+    """
+    Compare two image-record lists and return what exists in each side.
+
+    Parameters:
+        images_a (list[dict]): first image collection
+        images_b (list[dict]): second image collection
+        key (str): record key to compare (default: FilePath)
+        normalize_paths (bool): normalize FilePath values before comparison
+
+    Returns:
+        dict: {
+            "count_a": int,
+            "count_b": int,
+            "unique_keys_a": int,
+            "unique_keys_b": int,
+            "only_in_a": list[str],
+            "only_in_b": list[str],
+            "shared_keys": list[str],
+            "duplicate_keys_a": dict[str, int],
+            "duplicate_keys_b": dict[str, int],
+        }
+    """
+
+    def to_compare_key(record):
+        value = record.get(key)
+        if key == "FilePath" and normalize_paths:
+            return _normalize_compare_path(value)
+        return value
+
+    keys_a = [to_compare_key(record) for record in images_a]
+    keys_b = [to_compare_key(record) for record in images_b]
+
+    set_a = set(keys_a)
+    set_b = set(keys_b)
+
+    duplicate_keys_a = {}
+    duplicate_keys_b = {}
+
+    for candidate in set_a:
+        count = keys_a.count(candidate)
+        if count > 1:
+            duplicate_keys_a[candidate] = count
+
+    for candidate in set_b:
+        count = keys_b.count(candidate)
+        if count > 1:
+            duplicate_keys_b[candidate] = count
+
+    def sorted_keys(values):
+        return sorted(values, key=lambda x: "" if x is None else str(x))
+
+    return {
+        "count_a": len(images_a),
+        "count_b": len(images_b),
+        "unique_keys_a": len(set_a),
+        "unique_keys_b": len(set_b),
+        "only_in_a": sorted_keys(set_a - set_b),
+        "only_in_b": sorted_keys(set_b - set_a),
+        "shared_keys": sorted_keys(set_a & set_b),
+        "duplicate_keys_a": duplicate_keys_a,
+        "duplicate_keys_b": duplicate_keys_b,
+    }
+
+
 """
 import os
 import numpy as np
