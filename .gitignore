@@ -1,7 +1,9 @@
 data/
+data_new/
 src/__pycache__/
 __pycache__/
 *.py[cod]
 
 __pycache__/
 *.pyc
+tests/
