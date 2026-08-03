@@ -7,3 +7,9 @@ __pycache__/
 __pycache__/
 *.pyc
 tests/
+
+copilot-instructions.md
+
+data_new
+data_new_2
+data_test
