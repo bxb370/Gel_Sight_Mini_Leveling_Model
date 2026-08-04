@@ -59,7 +59,6 @@ Default run expects these folders:
 - data
 - data_new
 - data_new_2
-- data_test
 
 If you want to use original data, copy those folders from:
 Sherwin-Williams\Gelsight - General\Gelsight Mini\Leveling Model Python Script Images
