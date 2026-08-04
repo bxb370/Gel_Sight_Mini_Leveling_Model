@@ -8,7 +8,7 @@ The Surface Vision system gives both raw and flat images. This model is built to
 
 Pipeline in plain terms:
 - read image folders
-- build metadata.csv from file names and paths
+- build metadata.csv using information from file paths
 - load and preprocess images
 - train and evaluate the model
 - export an ONNX model for frontend use
@@ -60,7 +60,6 @@ Default run expects these folders:
 - data_new
 - data_new_2
 - data_test
-- human_ratings
 
 If you are using original shared data, copy those folders from:
 Sherwin-Williams\Gelsight - General\Gelsight Mini\Leveling Model Python Script Images
@@ -92,7 +91,7 @@ Field format notes:
 
 ## Project Structure
 
-- human_ratings: human panel scores used for relabeling DD data
+- human_ratings: human panel scores used for relabling paint drawdown data
 - models: trained checkpoints and ONNX exports
 - notebooks: exploration and experiments
 - src: data loading, metadata building, training, and evaluation code
@@ -104,6 +103,14 @@ Field format notes:
 To add data, place it in a folder in the project root and extend metadata-building code so rows are appended to metadata.csv using the same columns listed above.
 
 If you want to run only your new dataset, skip the default metadata loading in main.py and build your own metadata.csv with the same schema.
+
+### Optional Preprocessing: Median Normalization
+
+You can apply median normalization to make image brightness more similar.
+
+For the model trained in this project, it did not improve performance, but it is still available for future experiments.
+
+Enable it with the `median_normalization` argument in `load_images_from_metadata`.
 
 ## Owner/Contact
 

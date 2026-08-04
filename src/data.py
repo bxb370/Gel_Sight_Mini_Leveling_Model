@@ -7,7 +7,29 @@ from PIL import Image
 import cv2
 import math
 
-def load_images_from_metadata(csv_path, base_dir=None, crop_fraction=None, use_cv2=False):
+
+def normalize_by_median(img, target_median=120):
+    """Scale image so its median pixel value matches target_median."""
+
+    img = img.astype(float)
+    current_median = np.median(img)
+
+    if current_median == 0:
+        return img
+
+    scale = target_median / current_median
+    normalized = img * scale
+
+    return np.clip(normalized, 0, 255).astype(np.uint8)
+
+
+def load_images_from_metadata(
+    csv_path,
+    base_dir=None,
+    crop_fraction=None,
+    use_cv2=False,
+    median_normalization=False,
+):
     """
     Loads images using metadata.csv, converts them to grayscale and optionally applies cropping.
 
@@ -16,6 +38,7 @@ def load_images_from_metadata(csv_path, base_dir=None, crop_fraction=None, use_c
         base_dir (str or None): base directory to prepend to FilePath
         crop_fraction (float or None): cropping fraction
         use_cv2 (bool): if True use OpenCV, otherwise PIL
+        median_normalization (bool): if True apply normalize_by_median
 
     Returns:
         images (list of dicts)
@@ -58,6 +81,9 @@ def load_images_from_metadata(csv_path, base_dir=None, crop_fraction=None, use_c
                     crop_w:w - crop_w
                 ]
 
+            if median_normalization:
+                img_array = normalize_by_median(img_array)
+
             record = {
                 "LevelingScore": row["LevelingScore"],
                 "Person": row["Person"],
@@ -77,7 +103,8 @@ def load_images_from_metadata(csv_path, base_dir=None, crop_fraction=None, use_c
 
     print(f"Loaded {len(images)} images "
           f"(cropping={'ON' if crop_fraction is not None else 'OFF'}, "
-          f"backend={'cv2' if use_cv2 else 'PIL'})")
+            f"median_norm={'ON' if median_normalization else 'OFF'}, "
+            f"backend={'cv2' if use_cv2 else 'PIL'})")
 
     return images
 
