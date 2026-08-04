@@ -1,7 +1,29 @@
 """This file contains functions to evaluate the model's performance."""
 
+import os
+
+import cv2
 import numpy as np
+import onnxruntime as ort
 import pandas as pd
+
+# Default ONNX model path relative to this file
+_DEFAULT_MODEL_PATH = os.path.join(os.path.dirname(__file__), "..", "models", "waveletcnn_v2.onnx")
+
+
+def predict_from_image_path(image_path: str, model_path: str = _DEFAULT_MODEL_PATH) -> float:
+    """Run ONNX inference on a single flat grayscale image (must be 2464x3280)."""
+    img = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
+    if img is None:
+        raise FileNotFoundError(f"Could not read image: {image_path}")
+    if img.shape != (2464, 3280):
+        raise ValueError(f"Expected image shape (2464, 3280), got {img.shape}")
+
+    img = img.astype(np.float32)[np.newaxis, np.newaxis, :, :]
+
+    session = ort.InferenceSession(os.path.abspath(model_path))
+    result = session.run(None, {"image": img})
+    return float(result[0].flat[0])
 
 
 def c_index(y_true, y_pred):

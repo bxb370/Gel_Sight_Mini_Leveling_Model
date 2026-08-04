@@ -6,12 +6,25 @@ This project trains a CNN to predict paint leveling score from Gel Site Mini ima
 
 The Surface Vision system gives both raw and flat images. This model is built to use flat images.
 
+Input images must be **2464 × 3280 pixels** (height × width). Images of any other size will produce incorrect predictions due to hardcoded crop indices in the ONNX model.
+
 Pipeline in plain terms:
 - read image folders
 - build metadata.csv using information from file paths
 - load and preprocess images
 - train and evaluate the model
 - export an ONNX model for frontend use
+
+
+more info about this project can be found -> link the documentation
+
+
+
+
+
+
+
+
 
 ## Tech Stack
 

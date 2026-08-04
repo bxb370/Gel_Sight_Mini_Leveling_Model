@@ -8,7 +8,7 @@ sys.path.append(os.path.abspath("."))
 from src.data import load_images_from_metadata, filter_images
 from src.build_metadata import load_metadata
 from src.model import train_and_evaluate, export_onnx
-from src.evaluation import evaluate_model
+from src.evaluation import evaluate_model, predict_from_image_path
 
 
 # Step 1: Build metadata.csv from images in the local data folders.
@@ -58,5 +58,10 @@ metrics = evaluate_model(preds_np, labels_np, groups_real)
 
 # Step 6: Export ONNX model for downstream/frontend inference.
 export_onnx(model, save_path=os.path.join("models", "waveletcnn_v2.onnx"))
+
+# Step 7: Make inference with a new image (optional).
+prediction = predict_from_image_path("C:\\Users\\bxb370\\GelSiteMiniFlowAndLevelingModel\\data_test\\{leveling-5.8}_P{Brooke}_D{7.21.26}_type{TEST}_GS{2BDR-9F02}_Panel{GS-25-143}_0degrees_flat.png")
+print(f"Predicted Leveling Score: {prediction:.2f}")
+
 
 
