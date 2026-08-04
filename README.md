@@ -61,7 +61,7 @@ Default run expects these folders:
 - data_new_2
 - data_test
 
-If you are using original shared data, copy those folders from:
+If you want to use original data, copy those folders from:
 Sherwin-Williams\Gelsight - General\Gelsight Mini\Leveling Model Python Script Images
 
 ## Run the Pipeline
@@ -92,7 +92,7 @@ Field format notes:
 ## Project Structure
 
 - human_ratings: human panel scores used for relabling paint drawdown data
-- models: trained checkpoints and ONNX exports
+- models: ONNX exports
 - notebooks: exploration and experiments
 - src: data loading, metadata building, training, and evaluation code
 - main.py: end-to-end pipeline entry point
