@@ -16,15 +16,7 @@ Pipeline in plain terms:
 - export an ONNX model for frontend use
 
 
-more info about this project can be found -> link the documentation
-
-
-
-
-
-
-
-
+more info about this project can be found -> link the documentation (ADD THIS)
 
 ## Tech Stack
 
