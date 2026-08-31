@@ -32,8 +32,7 @@ https://swcompany-my.sharepoint.com/:w:/g/personal/brooke_brocker_sherwin_com/IQ
 1. Clone the repository
 
 ```powershell
-git clone https://github.com/bxb370/Gel_Site_Mini_Flow_And_Leveling_Model.git
-cd Gel_Site_Mini_Flow_And_Leveling_Model
+git clone https://github.com/bxb370/Gel_Sight_Mini_Leveling_Model.git
 ```
 
 2. Confirm Python version
