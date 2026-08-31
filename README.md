@@ -15,8 +15,7 @@ Pipeline in plain terms:
 - train and evaluate the model
 - export an ONNX model for frontend use
 
-
-more info about this project can be found -> link the documentation (ADD THIS)
+More information about this project can be found in the CTM https://swcompany-my.sharepoint.com/:w:/g/personal/brooke_brocker_sherwin_com/IQCUXzEv3xC0RIpSMb9GTtUAAQHqgqW15JRK0B3elihciTw?e=ic1gsI
 
 ## Tech Stack
 
