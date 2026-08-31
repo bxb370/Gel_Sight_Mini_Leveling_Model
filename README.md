@@ -1,8 +1,8 @@
-# Gel Site Mini Leveling CNN Model
+# Gel Sight Mini Leveling CNN Model
 
 ## Overview
 
-This project trains a CNN to predict paint leveling score from Gel Site Mini images.
+This project trains a CNN to predict paint leveling score from Gel Sight Mini images.
 
 The Surface Vision system gives both raw and flat images. This model is built to use flat images.
 
