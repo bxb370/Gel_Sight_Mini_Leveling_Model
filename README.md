@@ -123,13 +123,13 @@ Testing showed that different cameras produced very similar panel rankings but e
 
 The offset is calculated using the average score of 10 blank images (images captured with nothing touching the sensor):
 
-Offset = 1.2864 × AverageBlank - 12.2190
+- Offset = 1.2864 × AverageBlank - 12.2190
 
 The corrected leveling score is then calculated as:
 
-CorrectedScore = ModelScore - Offset
+- CorrectedScore = ModelScore - Offset
 
-This relationship was experimentally determined by comparing blank-image scores to the offset required to align model predictions with human leveling ratings. Additional details, validation, and calibration studies are available in the associated CTM.
+This relationship was experimentally determined by comparing blank-image scores to the offset required to align model predictions with human leveling ratings. Additional details are available in the associated CTM.
 
 ## Owner/Contact
 
