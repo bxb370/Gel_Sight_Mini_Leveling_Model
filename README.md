@@ -115,6 +115,22 @@ For the model trained in this project, it did not improve performance, but it is
 
 Enable it with the `median_normalization` argument in `load_images_from_metadata`.
 
+## Camera Calibration (Offset Correction)
+
+The exported ONNX model outputs the raw leveling prediction and does not include camera offset correction. The offset correction was developed after model training and deployment to account for score shifts observed between GelSight Mini cameras.
+
+Testing showed that different cameras produced very similar panel rankings but exhibited approximately constant score offsets. To align scores across cameras, an offset correction is applied after ONNX inference.
+
+The offset is calculated using the average score of 10 blank images (images captured with nothing touching the sensor):
+
+Offset = 1.2864 × AverageBlank - 12.2190
+
+The corrected leveling score is then calculated as:
+
+CorrectedScore = ModelScore - Offset
+
+This relationship was experimentally determined by comparing blank-image scores to the offset required to align model predictions with human leveling ratings. Additional details, validation, and calibration studies are available in the associated CTM.
+
 ## Owner/Contact
 
 - Author: Brooke Brocker (Data Science Co-op, 2026)
